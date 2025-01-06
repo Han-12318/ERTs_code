@@ -1,0 +1,3 @@
+<include file="$(find multi_robot_exp)/launch/lidar.launch">
+      <arg name="ns"                    value="$(arg bot_0_name)"/>
+    </include>

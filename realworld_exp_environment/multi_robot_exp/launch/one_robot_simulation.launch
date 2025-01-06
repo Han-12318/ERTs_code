@@ -1,0 +1,93 @@
+<launch>
+  <!-- 第一个机器人参数定义 -->
+  <arg name="bot_0_name" default="robot_0"/>   
+  <arg name="bot_0_x_pos" default="-0.75"/>
+  <arg name="bot_0_y_pos" default="0.45"/>
+  <arg name="bot_0_z_pos" default="0.2"/>
+
+  <!-- slam 参数-->
+  <arg name="slam_methods" default="gmapping" doc="slam type [gmapping, hector, karto, cartographer]"/>
+  <arg name="open_rviz" default="false"/>
+  <arg name="simulation" default= "false"/> 
+  <arg name="planner"  default="" doc="opt: dwa, teb"/> 
+
+  <!-- gmapping 参数-->
+  <arg name="bot_0_set_base_frame" default="robot_0/base_footprint" />
+  <arg name="bot_0_set_odom_frame" default="robot_0/odom" />
+  <arg name="bot_0_set_map_frame" default="robot_0/map" />
+  <arg name="bot_0_scan_topic" default="robot_0/scan" />
+
+  <param name="/use_sim_time" value="true" />  
+  
+  <!-- 世界加载 -->
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name" value="$(find map_three_gazebo)/world/map_w.world"/>
+    <!-- <arg name="world_name" value="$(find nanorobot_description)/worlds/room.world"/> -->
+    <arg name="paused" value="false"/>
+    <arg name="use_sim_time" value="true"/>
+    <arg name="gui" value="true"/>
+    <arg name="headless" value="false"/>
+    <arg name="debug" value="false"/>
+  </include>
+
+
+  <!-- 生成第一个机器人  -->
+  <group if="$(eval robot_name == '')">
+    <param name="robot_description" command="$(find xacro)/xacro --inorder 
+    $(find multi_robot_exp)/urdf/robot_description.urdf.xacro robot_name:=/$(arg bot_0_name)" />
+    
+    <node pkg="gazebo_ros" type="spawn_model" name="spawn_urdf"  
+      args="-urdf -model $(arg bot_0_name) -x $(arg bot_0_x_pos) -y $(arg bot_0_y_pos) -z $(arg bot_0_z_pos) 
+      -robot_name $(arg bot_0_name) -param robot_description" />
+
+    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
+
+    <node pkg="tf" type="static_transform_publisher" name="odom_to_map" args="0 0 0 0 0 0 map robot_0/odom 0" />
+    <!-- 启动 rviz -->
+  <group>
+
+  <group unless="$(eval robot_name == '')">
+    <group ns="$(arg bot_0_name)"> 
+      <param name="tf_prefix" value="$(arg bot_0_name)" />
+      <param name="robot_description" command="$(find xacro)/xacro --inorder 
+      $(find multi_robot_exp)/urdf/robot_description.urdf.xacro robot_name:=/$(arg bot_0_name)" />
+    
+      <node pkg="gazebo_ros" type="spawn_model" name="spawn_urdf"  
+        args="-urdf -model $(arg bot_0_name) -x $(arg bot_0_x_pos) -y $(arg bot_0_y_pos) -z $(arg bot_0_z_pos) 
+        -robot_name $(arg bot_0_name) -param robot_description" />
+
+      <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
+
+      <node pkg="tf" type="static_transform_publisher" name="odom_to_map" args="0 0 0 0 0 0 map robot_0/odom 0" />
+      <group>
+  </group>
+
+  <!-- 机器人雷达 -->
+  <group unless="$(arg simulation)">
+    <include file="$(find multi_robot_exp)/launch/robot_lidar.launch"/>
+  </group>
+  
+  <!-- SLAM: Gmapping, Cartographer, Hector, Karto -->
+  <include file="$(find multi_robot_exp)/launch/includes/$(arg slam_methods).launch">
+    <arg name="simulation"            value="$(arg simulation)"/>
+    <arg name="set_base_frame"            value="$(arg bot_0_set_base_frame)"/>
+    <arg name="set_odom_frame"            value="$(arg bot_0_set_odom_frame)"/>
+    <arg name="set_map_frame"            value="$(arg bot_0_set_map_frame)"/>
+    <arg name="scan_topic"            value="$(arg bot_0_scan_topic)"/>
+  </include>
+
+  <group unless="$(eval planner == '')">
+    <include file="$(find robot_navigation)/launch/move_base.launch" unless="$(eval planner == '')">
+        <arg name="planner"            value="$(arg planner)"/>
+    </include>
+  </group>
+
+  <!-- rviz -->
+  <group if="$(arg open_rviz)"> 
+    <node pkg="rviz" type="rviz" name="rviz" required="true"
+          args="-d $(find robot_navigation)/rviz/slam.rviz"/>
+  </group>
+  
+
+</launch>
+

@@ -1,0 +1,19 @@
+<launch>
+    <!--robot bast type use different tf value-->
+    <arg name="ns" default="robot_0"/>
+    <arg name="base_type"       default="$(env BASE_TYPE)" />
+    <!-- robot frame -->
+    <arg name="base_frame"       default="$(arg ns)/base_link" />    
+    <arg name="lidar_type"       default="$(env LIDAR_TYPE)" />   
+    <arg name="lidar_frame"     default="$(arg ns)/base_laser_link"/>  
+
+    <node pkg="tf" type="static_transform_publisher" name="base_link_to_laser"
+        args="-0.01225 0.0 0.18 3.14159265 0.0 0.0 $(arg base_frame) $(arg lidar_frame) 20">
+    </node>
+    
+    <include file="$(find multi_robot_exp)/launch/lidar/$(arg lidar_type).launch">
+        <arg name="lidar_frame"            value="$(arg lidar_frame)"/>
+    </include>
+
+    
+</launch>

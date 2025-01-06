@@ -1,0 +1,31 @@
+<launch>
+    <!-- 设置地图的配置文件 -->
+    <arg name="map_file" default="$(find multi_robot_exp)/map/testmap.yaml"/>
+    <arg name="simulation" default= "false"/> 
+    <!-- 运行地图服务器，并且加载设置的地图-->
+    <node name="map_server" pkg="map_server" type="map_server" args="$(find multi_robot_exp)/map/$(arg map)"/>
+    <!-- 启动AMCL节点 -->
+    <include file="$(find multi_robot_exp)/launch/my_amcl_diff.launch" />
+    <!-- 运行rviz -->
+    <node pkg="rviz" type="rviz" name="rviz"/>
+
+    <group unless="$(arg simulation)">
+    <!-- robot with lidar -->
+    <include file="$(find multi_robot_exp)/launch/robot_lidar.launch">
+          <!--<arg name="robot_name"            value="$(arg robot_name)"/>-->
+    </include>
+    <!-- Map server -->
+    <node pkg="map_server" name="map_server" type="map_server" args="$(arg map_file)">
+      <param name="frame_id" value="map"/>
+    </node>
+    <!-- AMCL -->
+    <node pkg="amcl" type="amcl" name="amcl" output="screen">
+      <rosparam file="$(find robot_navigation)/param/$(env BASE_TYPE)/amcl_params.yaml" command="load" />
+      <param name="initial_pose_x"            value="0.0"/>
+      <param name="initial_pose_y"            value="0.0"/>
+      <param name="initial_pose_a"            value="0.0"/>
+    </node>
+  </group>
+
+
+</launch>

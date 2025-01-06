@@ -1,0 +1,111 @@
+<launch>
+  <!-- 第一个机器人参数定义 -->
+  <arg name="bot_0_name" default="robot_0"/>  
+  <arg name="bot_0_x_pos" default="-0.75"/>
+  <arg name="bot_0_y_pos" default="0.45"/>
+  <arg name="bot_0_z_pos" default="0.19"/>
+  <arg name="bot_0_yaw" default="1.57"/> 
+
+  <arg name="bot_1_name" default="robot_1"/>  
+  <arg name="bot_1_x_pos" default="-2.00"/>
+  <arg name="bot_1_y_pos" default="0.15"/>
+  <arg name="bot_1_z_pos" default="0.19"/>
+  <arg name="bot_1_yaw" default="0.0"/>
+
+  <arg name="bot_2_name" default="robot_2"/>  
+  <arg name="bot_2_x_pos" default="-1.60"/>
+  <arg name="bot_2_y_pos" default="1.95"/>
+  <arg name="bot_2_z_pos" default="0.19"/>
+  <arg name="bot_2_yaw" default="0.0"/>
+
+  <!-- slam 参数-->
+  <arg name="slam_methods" default="gmapping" doc="slam type [gmapping, hector, karto, cartographer]"/>
+  <arg name="open_rviz" default="false"/>
+  <arg name="simulation" default= "false"/> 
+  <arg name="planner"  default="" doc="opt: dwa, teb"/> 
+
+  <param name="/use_sim_time" value="true" />  
+  
+  <!-- 世界加载 -->
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name" value="$(find map_three_gazebo)/world/map_w.world"/>
+    <!-- <arg name="world_name" value="$(find nanorobot_description)/worlds/room.world"/> -->
+    <arg name="paused" value="false"/>
+    <arg name="use_sim_time" value="true"/>
+    <arg name="gui" value="true"/>
+    <arg name="headless" value="false"/>
+    <arg name="debug" value="false"/>
+  </include>
+
+  <!-- 创建机器人  -->
+  <group ns="$(arg bot_0_name)"> <!-- spawn first robot  -->
+    <!--加载机器人模型-->
+    <param name="robot_description" command="$(find xacro)/xacro --inorder 
+    $(find nanorobot_description)/urdf/robot_description.urdf.xacro robot_name:=/$(arg bot_0_name)" />
+    <!--机器人位置发布节点-->
+    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" >
+      <param name="publish_frequency" type="double" value="50.0" />
+      <param name="tf_prefix" value="$(arg bot_0_name)" />
+    </node>
+    <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-urdf -model $(arg bot_0_name) 
+    -x $(arg bot_0_x_pos) -y $(arg bot_0_y_pos) -z $(arg bot_0_z_pos) -Y $(arg bot_0_yaw) -param robot_description" />
+    
+    <include file="$(find multi_robot_exp)/launch/lidar.launch">
+      <arg name="ns"                    value="$(arg bot_0_name)"/>
+    </include>
+
+    <include file="$(find multi_robot_exp)/launch/includes/$(arg slam_methods).launch">
+      <arg name="simulation"            value="true"/>
+      <arg name="ns"                    value="$(arg bot_0_name)"/>
+    </include>
+  </group>
+
+  <!--加载机器人模型-->
+  <group ns="$(arg bot_1_name)"> <!-- spawn first robot  -->
+    <!--加载机器人模型-->
+    <param name="robot_description" command="$(find xacro)/xacro --inorder 
+    $(find nanorobot_description)/urdf/robot_description.urdf.xacro robot_name:=/$(arg bot_1_name)" />
+    <!--机器人位置发布节点-->
+    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" >
+      <param name="publish_frequency" type="double" value="50.0" />
+      <param name="tf_prefix" value="$(arg bot_1_name)" />
+    </node>
+    <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-urdf -model $(arg bot_1_name) 
+    -x $(arg bot_1_x_pos) -y $(arg bot_1_y_pos) -z $(arg bot_1_z_pos) -Y $(arg bot_1_yaw) -param robot_description" />
+    
+    <include file="$(find multi_robot_exp)/launch/lidar.launch">
+      <arg name="ns"                    value="$(arg bot_1_name)"/>
+    </include>
+
+    <include file="$(find multi_robot_exp)/launch/includes/$(arg slam_methods).launch">
+      <arg name="simulation"            value="true"/>
+      <arg name="ns"                    value="$(arg bot_1_name)"/>
+    </include>
+  </group>
+
+  <group ns="$(arg bot_2_name)"> <!-- spawn first robot  -->
+    <!--加载机器人模型-->
+    <param name="robot_description" command="$(find xacro)/xacro --inorder 
+    $(find nanorobot_description)/urdf/robot_description.urdf.xacro robot_name:=/$(arg bot_2_name)" />
+    <!--机器人位置发布节点-->
+    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" >
+      <param name="publish_frequency" type="double" value="50.0" />
+      <param name="tf_prefix" value="$(arg bot_2_name)" />
+    </node>
+    <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-urdf -model $(arg bot_2_name) 
+    -x $(arg bot_2_x_pos) -y $(arg bot_2_y_pos) -z $(arg bot_2_z_pos) -Y $(arg bot_2_yaw) -param robot_description" />
+    
+    <include file="$(find multi_robot_exp)/launch/lidar.launch">
+      <arg name="ns"                    value="$(arg bot_2_name)"/>
+    </include>
+
+    <include file="$(find multi_robot_exp)/launch/includes/$(arg slam_methods).launch">
+      <arg name="simulation"            value="true"/>
+      <arg name="ns"                    value="$(arg bot_2_name)"/>
+    </include>
+
+  </group>
+
+
+</launch>
+
